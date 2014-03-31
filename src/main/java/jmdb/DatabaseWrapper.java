@@ -54,7 +54,7 @@ public class DatabaseWrapper {
 
 	public static native void envSetMaxDbs(long env, int dbs);
 
-	public static native void envGetMaxKeySize(long env);
+	public static native int envGetMaxKeySize(long env);
 
 	public static native long txnBegin(long env, long parent, int flags);
 

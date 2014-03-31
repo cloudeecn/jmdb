@@ -263,7 +263,13 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_envSetMapSize(JNIEnv *vm,
  * Signature: (JI)V
  */
 JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_envSetMaxReaders(JNIEnv *vm,
-		jclass clazz, jlong, jint);
+		jclass clazz, jlong envL, jint readers) {
+	MDB_env *envC = (MDB_env*) envL;
+	int code = mdb_env_set_maxreaders(envC, readers);
+	if (code) {
+		throwDatabaseException(vm, code);
+	}
+}
 
 /*
  * Class:     jmdb_DatabaseWrapper
@@ -271,7 +277,15 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_envSetMaxReaders(JNIEnv *vm,
  * Signature: (J)I
  */
 JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_envGetMaxReaders(JNIEnv *vm,
-		jclass clazz, jlong);
+		jclass clazz, jlong envL) {
+	MDB_env *envC = (MDB_env*) envL;
+	unsigned int max_readers;
+	int code = mdb_env_get_maxreaders(envC, &max_readers);
+	if (code) {
+		throwDatabaseException(vm, code);
+	}
+	return max_readers;
+}
 
 /*
  * Class:     jmdb_DatabaseWrapper
@@ -279,15 +293,24 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_envGetMaxReaders(JNIEnv *vm,
  * Signature: (JI)V
  */
 JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_envSetMaxDbs(JNIEnv *vm,
-		jclass clazz, jlong, jint);
+		jclass clazz, jlong envL, jint dbs) {
+	MDB_env *envC = (MDB_env*) envL;
+	int code = mdb_env_set_maxdbs(envC, dbs);
+	if (code) {
+		throwDatabaseException(vm, code);
+	}
+}
 
 /*
  * Class:     jmdb_DatabaseWrapper
  * Method:    envGetMaxKeySize
- * Signature: (J)V
+ * Signature: (J)I
  */
-JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_envGetMaxKeySize(JNIEnv *vm,
-		jclass clazz, jlong);
+JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_envGetMaxKeySize(JNIEnv *vm,
+		jclass clazz, jlong envL) {
+	MDB_env *envC = (MDB_env*) envL;
+	return mdb_env_get_maxreaders(envC);
+}
 
 /*
  * Class:     jmdb_DatabaseWrapper
@@ -295,7 +318,17 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_envGetMaxKeySize(JNIEnv *vm,
  * Signature: (JJI)J
  */
 JNIEXPORT jlong JNICALL Java_jmdb_DatabaseWrapper_txnBegin(JNIEnv *vm,
-		jclass clazz, jlong, jlong, jint);
+		jclass clazz, jlong envL, jlong parentL, jint flags) {
+	MDB_env *envC = (MDB_env*) envL;
+	MDB_txn *parentC = (MDB_txn *) parentL;
+	MDB_txn *result;
+	int code = mdb_txn_begin(envC, parentC, flags, &result);
+	if (code) {
+		throwDatabaseException(vm, code);
+		return 0;
+	}
+	return (jlong) result;
+}
 
 /*
  * Class:     jmdb_DatabaseWrapper
@@ -303,7 +336,10 @@ JNIEXPORT jlong JNICALL Java_jmdb_DatabaseWrapper_txnBegin(JNIEnv *vm,
  * Signature: (J)J
  */
 JNIEXPORT jlong JNICALL Java_jmdb_DatabaseWrapper_txnEnv(JNIEnv *vm,
-		jclass clazz, jlong);
+		jclass clazz, jlong txnL) {
+	MDB_env *env = mdb_txn_env((MDB_txn*) txnL);
+	return (jlong) env;
+}
 
 /*
  * Class:     jmdb_DatabaseWrapper
@@ -311,7 +347,12 @@ JNIEXPORT jlong JNICALL Java_jmdb_DatabaseWrapper_txnEnv(JNIEnv *vm,
  * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_txnCommit(JNIEnv *vm,
-		jclass clazz, jlong);
+		jclass clazz, jlong txnL) {
+	int code = mdb_txn_commit((MDB_txn*) txnL);
+	if (code) {
+		throwDatabaseException(vm, code);
+	}
+}
 
 /*
  * Class:     jmdb_DatabaseWrapper
@@ -319,7 +360,9 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_txnCommit(JNIEnv *vm,
  * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_txnAbort(JNIEnv *vm,
-		jclass clazz, jlong);
+		jclass clazz, jlong txnL) {
+	mdb_txn_abort((MDB_txn*) txnL);
+}
 
 /*
  * Class:     jmdb_DatabaseWrapper
@@ -327,7 +370,9 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_txnAbort(JNIEnv *vm,
  * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_txnReset(JNIEnv *vm,
-		jclass clazz, jlong);
+		jclass clazz, jlong txnL) {
+	mdb_txn_reset((MDB_txn*) txnL);
+}
 
 /*
  * Class:     jmdb_DatabaseWrapper
@@ -335,7 +380,12 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_txnReset(JNIEnv *vm,
  * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_txnRenew(JNIEnv *vm,
-		jclass clazz, jlong);
+		jclass clazz, jlong txnL) {
+	int code = mdb_txn_renew((MDB_txn*) txnL);
+	if (code) {
+		throwDatabaseException(vm, code);
+	}
+}
 
 /*
  * Class:     jmdb_DatabaseWrapper
@@ -343,7 +393,18 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_txnRenew(JNIEnv *vm,
  * Signature: (JLjava/lang/String;I)I
  */
 JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_dbiOpen(JNIEnv *vm,
-		jclass clazz, jlong, jstring, jint);
+		jclass clazz, jlong txnL, jstring name, jint flags) {
+	MDB_txn *txnC = (MDB_txn*) txnL;
+	const char *nameC = (*vm)->GetStringUTFChars(vm, name);
+	MDB_dbi dbi;
+	int code = mdb_dbi_open(txnC, nameC, flags, &dbi);
+	(*vm)->ReleaseStringUTFChars(vm, name, nameC);
+	if (code) {
+		throwDatabaseException(vm, code);
+		return -1;
+	}
+	return dbi;
+}
 
 /*
  * Class:     jmdb_DatabaseWrapper

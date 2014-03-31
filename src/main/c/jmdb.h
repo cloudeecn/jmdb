@@ -149,9 +149,9 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_envSetMaxDbs
 /*
  * Class:     jmdb_DatabaseWrapper
  * Method:    envGetMaxKeySize
- * Signature: (J)V
+ * Signature: (J)I
  */
-JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_envGetMaxKeySize
+JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_envGetMaxKeySize
   (JNIEnv *, jclass, jlong);
 
 /*
