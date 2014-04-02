@@ -20,7 +20,14 @@ package jmdb;
 
 import java.nio.ByteBuffer;
 
-public class DatabaseWrapper {
+/**
+ * Raw access to mdb_xxx functions, very dangerous! please use wrapped objects
+ * instead
+ * 
+ * @author cloudee
+ * 
+ */
+class DatabaseWrapper {
 
 	public static native int getEnvInfoSize();
 
@@ -97,7 +104,7 @@ public class DatabaseWrapper {
 
 	public static native int cursorDbi(long cursor);
 
-	public static native int cursorGet(long cursor, byte[] key, int kofs,
+	public static native long cursorGet(long cursor, byte[] key, int kofs,
 			int klen, byte[] value, int vofs, int vlen, int op);
 
 	public static native void cursorPut(long cursor, byte[] key, int kofs,

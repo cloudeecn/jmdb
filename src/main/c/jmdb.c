@@ -685,7 +685,7 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_cursorDbi(JNIEnv *vm,
  * Method:    cursorGet
  * Signature: (J[BII[BIII)V
  */
-JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_cursorGet(JNIEnv *vm,
+JNIEXPORT jlong JNICALL Java_jmdb_DatabaseWrapper_cursorGet(JNIEnv *vm,
 		jclass clazz, jlong cursorL, jbyteArray keyA, jint kofs, jint klen,
 		jbyteArray valueA, jint vofs, jint vlen, jint op) {
 	MDB_cursor *cursorC = (MDB_cursor*) cursorL;
@@ -701,8 +701,8 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_cursorGet(JNIEnv *vm,
 	if (keyC == NULL || valueC == NULL) {
 		result = OOM;
 	} else {
-		key.mv_size = klen;
-		key.mv_data = keyC + kofs;
+		key.mv_size = 0;
+		value.mv_size = 0;
 		ret = mdb_cursor_get(cursorC, &key, &value, op);
 		if (ret == MDB_NOTFOUND) {
 			ret = -1;
@@ -712,12 +712,14 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_cursorGet(JNIEnv *vm,
 			sprintf(lenHolder, "%d", (int )value.mv_size);
 			result = IOOB;
 		} else {
+			memcpy(keyC + kofs, key.mv_data, key.mv_size);
 			memcpy(valueC + vofs, value.mv_data, value.mv_size);
-			ret = value.mv_size;
+			ret = ((((jlong) key.mv_size) & 0xffffffff) << 32)
+					+ (((jlong) value.mv_size) & 0xffffffff);
 		}
 	}
 	(*vm)->ReleasePrimitiveArrayCritical(vm, valueA, valueC, 0);
-	(*vm)->ReleasePrimitiveArrayCritical(vm, keyA, keyC, JNI_ABORT);
+	(*vm)->ReleasePrimitiveArrayCritical(vm, keyA, keyC, 0);
 
 	switch (result) {
 	case NONE:
