@@ -18,7 +18,7 @@
  */
 package jmdb;
 
-public final class Flags {
+public final class EnvFlags {
 	public static final int MDB_FIXEDMAP = 0x01;
 	public static final int MDB_NOSUBDIR = 0x4000;
 	public static final int MDB_NOSYNC = 0x10000;
