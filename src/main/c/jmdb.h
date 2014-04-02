@@ -255,7 +255,7 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_put
  * Method:    del
  * Signature: (JI[BII[BII)V
  */
-JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_del
+JNIEXPORT jboolean JNICALL Java_jmdb_DatabaseWrapper_del
   (JNIEnv *, jclass, jlong, jint, jbyteArray, jint, jint, jbyteArray, jint, jint);
 
 /*

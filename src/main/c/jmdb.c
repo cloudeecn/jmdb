@@ -480,7 +480,9 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_get(JNIEnv *vm, jclass clazz,
 		key.mv_size = klen;
 		key.mv_data = keyC + kofs;
 		ret = mdb_get(txnC, (MDB_dbi) dbi, &key, &value);
-		if (ret) {
+		if (ret == MDB_NOTFOUND) {
+			ret = -1;
+		} else if (ret) {
 			result = MDB;
 		} else if (value.mv_size > vlen) {
 			sprintf(lenHolder, "%d", value.mv_size);
@@ -533,7 +535,7 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_put(JNIEnv *vm, jclass clazz,
 		key.mv_data = keyC + kofs;
 		value.mv_size = vlen;
 		value.mv_data = valueC + vofs;
-		ret = mdb_put(txnC, (MDB_dbi) dbi, key, value, (unsigned int) flags);
+		ret = mdb_put(txnC, (MDB_dbi) dbi, &key, &value, (unsigned int) flags);
 		if (ret) {
 			result = MDB;
 		}
@@ -558,8 +560,56 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_put(JNIEnv *vm, jclass clazz,
  * Method:    del
  * Signature: (JI[BII[BII)V
  */
-JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_del(JNIEnv *vm, jclass clazz,
-		jlong, jint, jbyteArray, jint, jint, jbyteArray, jint, jint);
+JNIEXPORT jboolean JNICALL Java_jmdb_DatabaseWrapper_del(JNIEnv *vm,
+		jclass clazz, jlong txnL, jint dbi, jbyteArray keyA, jint kofs,
+		jint klen, jbyteArray valueA, jint vofs, jint vlen) {
+	MDB_txn *txnC = (MDB_txn*) txnL;
+	enum {
+		NONE, OOM, MDB
+	} result = NONE;
+	jint ret;
+	char lenHolder[16];
+	MDB_val key, value;
+
+	jbyte *keyC = (*vm)->GetPrimitiveArrayCritical(vm, keyA, NULL);
+	jbyte *valueC =
+			valueA ? (*vm)->GetPrimitiveArrayCritical(vm, valueA, NULL) : NULL;
+	if (keyC == NULL || (valueA && valueC == NULL)) {
+		result = OOM;
+	} else {
+		key.mv_size = klen;
+		key.mv_data = keyC + kofs;
+		if (valueA) {
+			value.mv_size = vlen;
+			value.mv_data = valueC + vofs;
+			ret = mdb_del(txnC, (MDB_dbi) dbi, &key, &value);
+		} else {
+			ret = mdb_del(txnC, (MDB_dbi) dbi, &key, NULL);
+		}
+		if (ret == MDB_NOTFOUND) {
+			ret = 0;
+		} else if (ret) {
+			result = MDB;
+		} else {
+			ret = 1;
+		}
+	}
+	if (valueA) {
+		(*vm)->ReleasePrimitiveArrayCritical(vm, valueA, valueC, 0);
+	}
+	(*vm)->ReleasePrimitiveArrayCritical(vm, keyA, keyC, JNI_ABORT);
+
+	switch (result) {
+	case NONE:
+		return ret;
+	case OOM:
+		throwNew(vm, "java/lang/OutOfMemoryError", "");
+		return -1;
+	case MDB:
+		throwDatabaseException(vm, ret);
+		return -1;
+	}
+}
 
 /*
  * Class:     jmdb_DatabaseWrapper
