@@ -617,7 +617,16 @@ JNIEXPORT jboolean JNICALL Java_jmdb_DatabaseWrapper_del(JNIEnv *vm,
  * Signature: (JI)J
  */
 JNIEXPORT jlong JNICALL Java_jmdb_DatabaseWrapper_cursorOpen(JNIEnv *vm,
-		jclass clazz, jlong, jint);
+		jclass clazz, jlong txnL, jint dbi) {
+	MDB_txn *txnC = (MDB_txn*) txnL;
+	MDB_cursor *cursorC;
+	jint code;
+	code = mdb_cursor_open(txnC, (MDB_dbi) dbi, &cursorC);
+	if (code) {
+		throwDatabaseException(vm, code);
+	}
+	return (jlong) cursorC;
+}
 
 /*
  * Class:     jmdb_DatabaseWrapper
@@ -625,7 +634,10 @@ JNIEXPORT jlong JNICALL Java_jmdb_DatabaseWrapper_cursorOpen(JNIEnv *vm,
  * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_cursorClose(JNIEnv *vm,
-		jclass clazz, jlong);
+		jclass clazz, jlong cursorL) {
+	MDB_cursor *cursorC = (MDB_cursor*) cursorL;
+	mdb_cursor_close(cursorC);
+}
 
 /*
  * Class:     jmdb_DatabaseWrapper
@@ -633,7 +645,15 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_cursorClose(JNIEnv *vm,
  * Signature: (JJ)V
  */
 JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_cursorRenew(JNIEnv *vm,
-		jclass clazz, jlong, jlong);
+		jclass clazz, jlong txnL, jlong cursorL) {
+	MDB_txn *txnC = (MDB_txn*) txnL;
+	MDB_cursor *cursorC = (MDB_cursor*) cursorL;
+
+	jint code = mdb_cursor_renew(txnC, cursorC);
+	if (code) {
+		throwDatabaseException(vm, code);
+	}
+}
 
 /*
  * Class:     jmdb_DatabaseWrapper
@@ -641,7 +661,10 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_cursorRenew(JNIEnv *vm,
  * Signature: (J)J
  */
 JNIEXPORT jlong JNICALL Java_jmdb_DatabaseWrapper_cursorTxn(JNIEnv *vm,
-		jclass clazz, jlong);
+		jclass clazz, jlong cursorL) {
+	MDB_cursor *cursorC = (MDB_cursor*) cursorL;
+	return (jlong) mdb_cursor_txn(cursorC);
+}
 
 /*
  * Class:     jmdb_DatabaseWrapper
@@ -649,7 +672,10 @@ JNIEXPORT jlong JNICALL Java_jmdb_DatabaseWrapper_cursorTxn(JNIEnv *vm,
  * Signature: (J)I
  */
 JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_cursorDbi(JNIEnv *vm,
-		jclass clazz, jlong);
+		jclass clazz, jlong cursorL) {
+	MDB_cursor *cursorC = (MDB_cursor*) cursorL;
+	return (jint) mdb_cursor_dbi(cursorC);
+}
 
 /*
  * Class:     jmdb_DatabaseWrapper
