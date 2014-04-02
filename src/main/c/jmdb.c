@@ -604,10 +604,10 @@ JNIEXPORT jboolean JNICALL Java_jmdb_DatabaseWrapper_del(JNIEnv *vm,
 		return ret;
 	case OOM:
 		throwNew(vm, "java/lang/OutOfMemoryError", "");
-		return -1;
+		return 0;
 	case MDB:
 		throwDatabaseException(vm, ret);
-		return -1;
+		return 0;
 	}
 }
 
@@ -682,9 +682,54 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_cursorDbi(JNIEnv *vm,
  * Method:    cursorGet
  * Signature: (J[BII[BIII)V
  */
-JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_cursorGet(JNIEnv *vm,
-		jclass clazz, jlong, jbyteArray, jint, jint, jbyteArray, jint, jint,
-		jint);
+JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_cursorGet(JNIEnv *vm,
+		jclass clazz, jlong cursorL, jbyteArray keyA, jint kofs, jint klen,
+		jbyteArray valueA, jint vofs, jint vlen, jint op) {
+	MDB_cursor *cursorC = (MDB_cursor*) cursorL;
+	enum {
+		NONE, OOM, MDB, IOOB
+	} result = NONE;
+	jint ret;
+	char lenHolder[16];
+	MDB_val key, value;
+
+	jbyte *keyC = (*vm)->GetPrimitiveArrayCritical(vm, keyA, NULL);
+	jbyte *valueC = (*vm)->GetPrimitiveArrayCritical(vm, valueA, NULL);
+	if (keyC == NULL || valueC == NULL) {
+		result = OOM;
+	} else {
+		key.mv_size = klen;
+		key.mv_data = keyC + kofs;
+		ret = mdb_cursor_get(cursorC, &key, &value, op);
+		if (ret == MDB_NOTFOUND) {
+			ret = -1;
+		} else if (ret) {
+			result = MDB;
+		} else if (value.mv_size > vlen) {
+			sprintf(lenHolder, "%d", value.mv_size);
+			result = IOOB;
+		} else {
+			memcpy(valueC + vofs, value.mv_data, value.mv_size);
+			ret = value.mv_size;
+		}
+	}
+	(*vm)->ReleasePrimitiveArrayCritical(vm, valueA, valueC, 0);
+	(*vm)->ReleasePrimitiveArrayCritical(vm, keyA, keyC, JNI_ABORT);
+
+	switch (result) {
+	case NONE:
+		return ret;
+	case OOM:
+		throwNew(vm, "java/lang/OutOfMemoryError", "");
+		return -1;
+	case MDB:
+		throwDatabaseException(vm, ret);
+		return -1;
+	case IOOB:
+		throwNew(vm, "java/lang/IndexOutOfBoundException", lenHolder);
+		return -1;
+	}
+}
 
 /*
  * Class:     jmdb_DatabaseWrapper
@@ -692,8 +737,44 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_cursorGet(JNIEnv *vm,
  * Signature: (J[BII[BIII)V
  */
 JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_cursorPut(JNIEnv *vm,
-		jclass clazz, jlong, jbyteArray, jint, jint, jbyteArray, jint, jint,
-		jint);
+		jclass clazz, jlong cursorL, jbyteArray keyA, jint kofs, jint klen,
+		jbyteArray valueA, jint vofs, jint vlen, jint flags) {
+	MDB_cursor *cursorC = (MDB_txn*) cursorL;
+	enum {
+		NONE, OOM, MDB
+	} result = NONE;
+	jint ret;
+	char lenHolder[16];
+	MDB_val key, value;
+
+	jbyte *keyC = (*vm)->GetPrimitiveArrayCritical(vm, keyA, NULL);
+	jbyte *valueC = (*vm)->GetPrimitiveArrayCritical(vm, valueA, NULL);
+	if (keyC == NULL || valueC == NULL) {
+		result = OOM;
+	} else {
+		key.mv_size = klen;
+		key.mv_data = keyC + kofs;
+		value.mv_size = vlen;
+		value.mv_data = valueC + vofs;
+		ret = mdb_cursor_put(cursorC, &key, &value, (unsigned int) flags);
+		if (ret) {
+			result = MDB;
+		}
+	}
+	(*vm)->ReleasePrimitiveArrayCritical(vm, valueA, valueC, 0);
+	(*vm)->ReleasePrimitiveArrayCritical(vm, keyA, keyC, JNI_ABORT);
+
+	switch (result) {
+	case NONE:
+		return;
+	case OOM:
+		throwNew(vm, "java/lang/OutOfMemoryError", "");
+		return;
+	case MDB:
+		throwDatabaseException(vm, ret);
+		return;
+	}
+}
 
 /*
  * Class:     jmdb_DatabaseWrapper
@@ -701,4 +782,10 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_cursorPut(JNIEnv *vm,
  * Signature: (JI)V
  */
 JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_cursorDel(JNIEnv *vm,
-		jclass clazz, jlong, jint);
+		jclass clazz, jlong cursorL, jint flags) {
+	MDB_cursor *cursorC = (MDB_txn*) cursorL;
+	int code = mdb_cursor_del(cursorC, flags);
+	if (code) {
+		throwDatabaseException(vm, code);
+	}
+}

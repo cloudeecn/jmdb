@@ -84,7 +84,7 @@ public class DatabaseWrapper {
 	public static native void put(long txn, int dbi, byte[] key, int kofs,
 			int klen, byte[] value, int vofs, int vlen, int flags);
 
-	public static native void del(long txn, int dbi, byte[] key, int kofs,
+	public static native boolean del(long txn, int dbi, byte[] key, int kofs,
 			int klen, byte[] value, int vofs, int vlen);
 
 	public static native long cursorOpen(long txn, int dbi);
@@ -97,7 +97,7 @@ public class DatabaseWrapper {
 
 	public static native int cursorDbi(long cursor);
 
-	public static native void cursorGet(long cursor, byte[] key, int kofs,
+	public static native int cursorGet(long cursor, byte[] key, int kofs,
 			int klen, byte[] value, int vofs, int vlen, int op);
 
 	public static native void cursorPut(long cursor, byte[] key, int kofs,

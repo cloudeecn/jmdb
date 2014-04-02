@@ -303,7 +303,7 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_cursorDbi
  * Method:    cursorGet
  * Signature: (J[BII[BIII)V
  */
-JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_cursorGet
+JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_cursorGet
   (JNIEnv *, jclass, jlong, jbyteArray, jint, jint, jbyteArray, jint, jint, jint);
 
 /*
