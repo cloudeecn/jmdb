@@ -16,6 +16,10 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with jmdb. If not, see <http://www.gnu.org/licenses/>.
  */
+#include "jni.h"
+
+#include <string.h>
+
 #include "jmdb.h"
 #include "lmdb.h"
 
@@ -138,7 +142,7 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_envStat(JNIEnv *vm,
 	MDB_env *envC = (MDB_env*) envL;
 	MDB_stat *stat = (*vm)->GetDirectBufferAddress(vm, buf);
 	jlong size = (*vm)->GetDirectBufferCapacity(vm, buf);
-	if (size < sizeof(MDB_stat)) {
+	if (size < (jlong) sizeof(MDB_stat)) {
 		throwNew(vm, "java/lang/IndexOutOfBoundsException",
 				"ByteBuffer's capacity is less than MDB_stat's size");
 		return;
@@ -159,7 +163,7 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_envInfo(JNIEnv *vm,
 	MDB_env *envC = (MDB_env*) envL;
 	MDB_envinfo *info = (*vm)->GetDirectBufferAddress(vm, buf);
 	jlong size = (*vm)->GetDirectBufferCapacity(vm, buf);
-	if (size < sizeof(MDB_envinfo)) {
+	if (size < (jlong) sizeof(MDB_envinfo)) {
 		throwNew(vm, "java/lang/IndexOutOfBoundsException",
 				"ByteBuffer's capacity is less than MDB_envinfo's size");
 		return;
@@ -234,7 +238,7 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_envGetFlags(JNIEnv *vm,
 JNIEXPORT jstring JNICALL Java_jmdb_DatabaseWrapper_envGetPath(JNIEnv *vm,
 		jclass clazz, jlong envL) {
 	MDB_env *envC = (MDB_env*) envL;
-	char *ret;
+	const char *ret;
 	int code = mdb_env_get_path(envC, &ret);
 	if (code) {
 		throwDatabaseException(vm, code);
@@ -309,7 +313,7 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_envSetMaxDbs(JNIEnv *vm,
 JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_envGetMaxKeySize(JNIEnv *vm,
 		jclass clazz, jlong envL) {
 	MDB_env *envC = (MDB_env*) envL;
-	return mdb_env_get_maxreaders(envC);
+	return mdb_env_get_maxkeysize(envC);
 }
 
 /*
@@ -395,7 +399,7 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_txnRenew(JNIEnv *vm,
 JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_dbiOpen(JNIEnv *vm,
 		jclass clazz, jlong txnL, jstring name, jint flags) {
 	MDB_txn *txnC = (MDB_txn*) txnL;
-	const char *nameC = (*vm)->GetStringUTFChars(vm, name);
+	const char *nameC = (*vm)->GetStringUTFChars(vm, name, NULL);
 	MDB_dbi dbi;
 	int code = mdb_dbi_open(txnC, nameC, flags, &dbi);
 	(*vm)->ReleaseStringUTFChars(vm, name, nameC);
@@ -417,7 +421,7 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_stat(JNIEnv *vm, jclass clazz,
 	MDB_stat *stat = (*vm)->GetDirectBufferAddress(vm, buf);
 	jlong size = (*vm)->GetDirectBufferCapacity(vm, buf);
 	int code;
-	if (size < sizeof(MDB_stat)) {
+	if (size < (jlong) sizeof(MDB_stat)) {
 		throwNew(vm, "java/lang/IndexOutOfBoundsException",
 				"ByteBuffer's capacity is less than MDB_stat's size");
 		return;
@@ -484,8 +488,8 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_get(JNIEnv *vm, jclass clazz,
 			ret = -1;
 		} else if (ret) {
 			result = MDB;
-		} else if (value.mv_size > vlen) {
-			sprintf(lenHolder, "%d", value.mv_size);
+		} else if ((jlong) value.mv_size > vlen) {
+			sprintf(lenHolder, "%d", (int )value.mv_size);
 			result = IOOB;
 		} else {
 			memcpy(valueC + vofs, value.mv_data, value.mv_size);
@@ -523,7 +527,6 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_put(JNIEnv *vm, jclass clazz,
 		NONE, OOM, MDB
 	} result = NONE;
 	jint ret;
-	char lenHolder[16];
 	MDB_val key, value;
 
 	jbyte *keyC = (*vm)->GetPrimitiveArrayCritical(vm, keyA, NULL);
@@ -568,7 +571,6 @@ JNIEXPORT jboolean JNICALL Java_jmdb_DatabaseWrapper_del(JNIEnv *vm,
 		NONE, OOM, MDB
 	} result = NONE;
 	jint ret;
-	char lenHolder[16];
 	MDB_val key, value;
 
 	jbyte *keyC = (*vm)->GetPrimitiveArrayCritical(vm, keyA, NULL);
@@ -663,7 +665,8 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_cursorRenew(JNIEnv *vm,
 JNIEXPORT jlong JNICALL Java_jmdb_DatabaseWrapper_cursorTxn(JNIEnv *vm,
 		jclass clazz, jlong cursorL) {
 	MDB_cursor *cursorC = (MDB_cursor*) cursorL;
-	return (jlong) mdb_cursor_txn(cursorC);
+	MDB_txn *txn = mdb_cursor_txn(cursorC);
+	return (jlong) txn;
 }
 
 /*
@@ -705,8 +708,8 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_cursorGet(JNIEnv *vm,
 			ret = -1;
 		} else if (ret) {
 			result = MDB;
-		} else if (value.mv_size > vlen) {
-			sprintf(lenHolder, "%d", value.mv_size);
+		} else if ((jlong) value.mv_size > vlen) {
+			sprintf(lenHolder, "%d", (int )value.mv_size);
 			result = IOOB;
 		} else {
 			memcpy(valueC + vofs, value.mv_data, value.mv_size);
@@ -739,12 +742,11 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_cursorGet(JNIEnv *vm,
 JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_cursorPut(JNIEnv *vm,
 		jclass clazz, jlong cursorL, jbyteArray keyA, jint kofs, jint klen,
 		jbyteArray valueA, jint vofs, jint vlen, jint flags) {
-	MDB_cursor *cursorC = (MDB_txn*) cursorL;
+	MDB_cursor *cursorC = (MDB_cursor*) cursorL;
 	enum {
 		NONE, OOM, MDB
 	} result = NONE;
 	jint ret;
-	char lenHolder[16];
 	MDB_val key, value;
 
 	jbyte *keyC = (*vm)->GetPrimitiveArrayCritical(vm, keyA, NULL);
@@ -783,7 +785,7 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_cursorPut(JNIEnv *vm,
  */
 JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_cursorDel(JNIEnv *vm,
 		jclass clazz, jlong cursorL, jint flags) {
-	MDB_cursor *cursorC = (MDB_txn*) cursorL;
+	MDB_cursor *cursorC = (MDB_cursor*) cursorL;
 	int code = mdb_cursor_del(cursorC, flags);
 	if (code) {
 		throwDatabaseException(vm, code);

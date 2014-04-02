@@ -68,19 +68,8 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_envInfo
  * Method:    envSync
  * Signature: (JZ)V
  */
-	/*
-	 * Class:     jmdb_DatabaseWrapper
-	 * Method:    envSync
-	 * Signature: (JZ)V
-	 */
-	void Java_jmdb_DatabaseWrapper_envSync(JNIEnv* vm, jclass clazz, jlong envL,
-			jboolean force) {
-		MDB_env* envC = (MDB_env*) envL;
-		int ret = mdb_env_sync(envC, force);
-		if (ret) {
-			throwDatabaseException(vm, ret);
-		}
-	}
+void Java_jmdb_DatabaseWrapper_envSync
+  (JNIEnv *, jclass, jlong, jboolean);
 
 /*
  * Class:     jmdb_DatabaseWrapper

@@ -62,7 +62,11 @@ typedef signed __int64 jlong;
 #else
 
 #if defined(__GNUC__)
-# define JNIEXPORT __attribute__((externally_visible))
+# if defined(__APPLE__)
+#  define JNIEXPORT
+# else
+#  define JNIEXPORT __attribute__((externally_visible))
+# endif
 #else
 # define JNIEXPORT
 #endif
