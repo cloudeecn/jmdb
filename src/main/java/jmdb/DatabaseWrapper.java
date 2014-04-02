@@ -78,7 +78,7 @@ public class DatabaseWrapper {
 
 	// TODO custom compare/dupsort/relfunc/relctx
 
-	public static native void get(long txn, int dbi, byte[] key, int kofs,
+	public static native int get(long txn, int dbi, byte[] key, int kofs,
 			int klen, byte[] value, int vofs, int vlen);
 
 	public static native void put(long txn, int dbi, byte[] key, int kofs,

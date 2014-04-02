@@ -237,9 +237,9 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_dbiClose
 /*
  * Class:     jmdb_DatabaseWrapper
  * Method:    get
- * Signature: (JI[BII[BII)V
+ * Signature: (JI[BII[BII)I
  */
-JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_get
+JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_get
   (JNIEnv *, jclass, jlong, jint, jbyteArray, jint, jint, jbyteArray, jint, jint);
 
 /*
