@@ -84,6 +84,13 @@ public class DB {
 		}
 	}
 
+	public Cursor openCursor() {
+		if (closed) {
+			throw new IllegalStateException("DB is closed");
+		}
+		return new Cursor(this);
+	}
+
 	void close() {
 		if (!closed) {
 			DatabaseWrapper.dbiClose(env.pointer, handle);

@@ -18,12 +18,12 @@
  */
 package jmdb;
 
-public class DatabaseException {
+public class DatabaseException extends RuntimeException {
 
 	private int code;
 
 	public DatabaseException(int code) {
-		super();
+		super("" + code);
 		this.code = code;
 	}
 

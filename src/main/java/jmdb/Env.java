@@ -31,6 +31,7 @@ public class Env implements Closeable {
 	final boolean traceCreation;
 
 	private boolean closed;
+	private String path;
 	private StackTraceElement[] trace;
 
 	public Env() {
@@ -82,6 +83,7 @@ public class Env implements Closeable {
 
 	public void open(String path, int flags, int mode) {
 		checkClosed();
+		this.path = path;
 		DatabaseWrapper.envOpen(pointer, path, flags, mode);
 	}
 
@@ -110,6 +112,10 @@ public class Env implements Closeable {
 			DatabaseWrapper.envClose(pointer);
 			closed = true;
 		}
+	}
+
+	public String getPath() {
+		return path;
 	}
 
 	protected void finalize() {

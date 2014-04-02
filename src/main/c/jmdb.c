@@ -692,7 +692,8 @@ JNIEXPORT jlong JNICALL Java_jmdb_DatabaseWrapper_cursorGet(JNIEnv *vm,
 	enum {
 		NONE, OOM, MDB, IOOB
 	} result = NONE;
-	jint ret;
+	jlong ret;
+	jint code;
 	char lenHolder[16];
 	MDB_val key, value;
 
@@ -701,15 +702,19 @@ JNIEXPORT jlong JNICALL Java_jmdb_DatabaseWrapper_cursorGet(JNIEnv *vm,
 	if (keyC == NULL || valueC == NULL) {
 		result = OOM;
 	} else {
-		key.mv_size = 0;
+		key.mv_size = klen;
+		key.mv_data = keyC + kofs;
 		value.mv_size = 0;
-		ret = mdb_cursor_get(cursorC, &key, &value, op);
-		if (ret == MDB_NOTFOUND) {
+		code = mdb_cursor_get(cursorC, &key, &value, op);
+		if (code == MDB_NOTFOUND) {
 			ret = -1;
-		} else if (ret) {
+		} else if (code) {
 			result = MDB;
 		} else if ((jlong) value.mv_size > vlen) {
 			sprintf(lenHolder, "%d", (int )value.mv_size);
+			result = IOOB;
+		} else if ((jlong) key.mv_size > klen) {
+			sprintf(lenHolder, "%d", (int )key.mv_size);
 			result = IOOB;
 		} else {
 			memcpy(keyC + kofs, key.mv_data, key.mv_size);
@@ -728,7 +733,7 @@ JNIEXPORT jlong JNICALL Java_jmdb_DatabaseWrapper_cursorGet(JNIEnv *vm,
 		throwNew(vm, "java/lang/OutOfMemoryError", "");
 		return -1;
 	case MDB:
-		throwDatabaseException(vm, ret);
+		throwDatabaseException(vm, code);
 		return -1;
 	case IOOB:
 		throwNew(vm, "java/lang/IndexOutOfBoundException", lenHolder);

@@ -46,16 +46,18 @@ public class Cursor implements Closeable {
 		}
 	}
 
-	public void get(byte[] key, int kofs, int klen, byte[] value, int vofs,
-			int vlen, int op) {
-		get(key, kofs, klen, value, vofs, vlen, op, null);
+	public long get(byte[] key, int kofs, int klen, byte[] value, int vofs,
+			int vlen, CursorOp op) {
+		checkClosed();
+		return DatabaseWrapper.cursorGet(pointer, key, kofs, klen, value, vofs,
+				vlen, op.getCode());
 	}
 
 	public void get(byte[] key, int kofs, int klen, byte[] value, int vofs,
-			int vlen, int op, Sizes sizes) {
+			int vlen, CursorOp op, Sizes sizes) {
 		checkClosed();
 		long result = DatabaseWrapper.cursorGet(pointer, key, kofs, klen,
-				value, vofs, vlen, op);
+				value, vofs, vlen, op.getCode());
 		if (sizes != null) {
 			int keySize = (int) (result >>> 32);
 			int valueSize = (int) (result);
