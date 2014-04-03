@@ -111,8 +111,7 @@
 									<workingDirectory>src/main/c</workingDirectory>
 									<environmentVariables>
 										<CC>/usr/x86_64-apple-darwin9/bin/x86_64-apple-darwin9-gcc</CC>
-										<XCFLAGS>-I/usr/x86_64-apple-darwin9/lib/gcc/x86_64-apple-darwin9/4.0.1/include
-											-DMDB_DSYNC=O_SYNC</XCFLAGS>
+										<XCFLAGS><![CDATA[-I/usr/x86_64-apple-darwin9/lib/gcc/x86_64-apple-darwin9/4.0.1/include -DMDB_DSYNC=O_SYNC]]></XCFLAGS>
 										<LDFLAGS>-bundle</LDFLAGS>
 										<JNIDESTDIR>${basedir}/target/classes/jmdb/native/macosx</JNIDESTDIR>
 									</environmentVariables>
