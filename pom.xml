@@ -67,7 +67,7 @@
 									<workingDirectory>src/main/c</workingDirectory>
 									<environmentVariables>
 										<CC>gcc</CC>
-										<JNIDESTDIR>target/classes/jmdb/native/linux</JNIDESTDIR>
+										<JNIDESTDIR>${basedir}/target/classes/jmdb/native/linux</JNIDESTDIR>
 									</environmentVariables>
 									<arguments>
 										<argument>clean</argument>
