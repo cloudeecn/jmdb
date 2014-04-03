@@ -75,6 +75,26 @@
 									</arguments>
 								</configuration>
 							</execution>
+							<execution>
+								<id>farm-linux</id>
+								<phase>process-classes</phase>
+								<goals>
+									<goal>exec</goal>
+								</goals>
+								<configuration>
+									<executable>make</executable>
+									<workingDirectory>src/main/c</workingDirectory>
+									<environmentVariables>
+										<CC>/usr/x86_64-apple-darwin9/bin/x86_64-apple-darwin9-gcc</CC>
+										<JNIDESTDIR>${basedir}/target/classes/jmdb/native/macosx</JNIDESTDIR>
+									</environmentVariables>
+									<arguments>
+										<argument>-DMDB_DSYNC=O_SYNC</argument> <!-- For later osx versions that supports O_DSYNC try to remove this line -->
+										<argument>clean</argument>
+										<argument>install-jni</argument>
+									</arguments>
+								</configuration>
+							</execution>
 						</executions>
 					</plugin>
 					
