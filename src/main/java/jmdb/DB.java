@@ -1,5 +1,7 @@
 package jmdb;
 
+import java.io.UnsupportedEncodingException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +60,23 @@ public class DB {
 		}
 	}
 
+	public int get(byte[] key, byte[] holder) {
+		return get(key, 0, key.length, holder, 0, holder.length);
+	}
+
+	public byte[] get(byte[] key, int maxValueSize) {
+		byte[] holder = new byte[maxValueSize];
+		int size = get(key, 0, key.length, holder, 0, holder.length);
+		byte[] ret;
+		if (size != maxValueSize) {
+			ret = new byte[size];
+			System.arraycopy(holder, 0, ret, 0, size);
+		} else {
+			ret = holder;
+		}
+		return ret;
+	}
+
 	public void put(byte[] key, int kofs, int klen, byte[] value, int vofs,
 			int vlen, int flags) {
 		if (closed) {
@@ -67,6 +86,18 @@ public class DB {
 			checkParameters("value", value, vofs, vlen);
 			DatabaseWrapper.put(transaction.pointer, handle, key, kofs, klen,
 					value, vofs, vlen, flags);
+		}
+	}
+
+	public void put(byte[] key, byte[] value) {
+		put(key, 0, key.length, value, 0, value.length, 0);
+	}
+
+	public void put(String key, String value) {
+		try {
+			put(key.getBytes("utf-8"), value.getBytes("utf-8"));
+		} catch (UnsupportedEncodingException e) {
+			// not likely to be happened
 		}
 	}
 
