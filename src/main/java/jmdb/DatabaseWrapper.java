@@ -20,6 +20,7 @@ package jmdb;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
@@ -32,6 +33,33 @@ import java.nio.ByteBuffer;
  */
 class DatabaseWrapper {
 
+	private static void loadBundledNativeLibrary(String path)
+			throws IOException {
+		InputStream is = DatabaseWrapper.class.getResourceAsStream(path);
+		if (is == null) {
+			throw new IOException("Resource " + path + " not found");
+		}
+		try {
+			File temp = File.createTempFile("libjmdb", "so");
+			temp.deleteOnExit();
+			FileOutputStream fos = new FileOutputStream(temp);
+			try {
+				int read;
+				byte[] buf = new byte[8192];
+				while ((read = is.read(buf)) >= 0) {
+					fos.write(buf, 0, read);
+				}
+			} finally {
+				fos.close();
+			}
+			System.load(temp.getCanonicalPath());
+		} finally {
+			if (is != null) {
+				is.close();
+			}
+		}
+	}
+
 	static {
 		try {
 			String osName = System.getProperty("os.name");
@@ -43,25 +71,10 @@ class DatabaseWrapper {
 				}
 			}
 			osName = builder.toString();
-			InputStream is = DatabaseWrapper.class
-					.getResourceAsStream("native/" + osName + "/libjmdb.so");
 			try {
-				File temp = File.createTempFile("libjmdb", "so");
-				FileOutputStream fos = new FileOutputStream(temp);
-				try {
-					int read;
-					byte[] buf = new byte[8192];
-					while ((read = is.read(buf)) >= 0) {
-						fos.write(buf, 0, read);
-					}
-				} finally {
-					fos.close();
-				}
-				System.load(temp.getCanonicalPath());
-			} finally {
-				if (is != null) {
-					is.close();
-				}
+				loadBundledNativeLibrary("native/" + osName + "/libjmdb.so");
+			} catch (Exception e) {
+				loadBundledNativeLibrary("native/libjmdb.so");
 			}
 		} catch (Exception e) {
 			try {

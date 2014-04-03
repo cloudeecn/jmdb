@@ -16,7 +16,7 @@
 # There may be other macros in mdb.c of interest. You should
 # read mdb.c before changing any of them.
 #
-CC	= gcc
+#CC	= gcc
 W	= -W -Wall -Wno-unused-parameter -Wbad-function-cast
 THREADS = -pthread
 OPT = -O2 -g
