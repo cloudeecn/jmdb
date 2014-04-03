@@ -18,6 +18,9 @@
  */
 package jmdb;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 /**
@@ -28,6 +31,47 @@ import java.nio.ByteBuffer;
  * 
  */
 class DatabaseWrapper {
+
+	static {
+		try {
+			String osName = System.getProperty("os.name");
+			StringBuilder builder = new StringBuilder();
+			for (int i = 0, max = osName.length(); i < max; i++) {
+				char ch = osName.charAt(i);
+				if (Character.isLetterOrDigit(ch)) {
+					builder.append(Character.toLowerCase(ch));
+				}
+			}
+			osName = builder.toString();
+			InputStream is = DatabaseWrapper.class
+					.getResourceAsStream("native/" + osName + "/libjmdb.so");
+			try {
+				File temp = File.createTempFile("libjmdb", "so");
+				FileOutputStream fos = new FileOutputStream(temp);
+				try {
+					int read;
+					byte[] buf = new byte[8192];
+					while ((read = is.read(buf)) >= 0) {
+						fos.write(buf, 0, read);
+					}
+				} finally {
+					fos.close();
+				}
+				System.load(temp.getCanonicalPath());
+			} finally {
+				if (is != null) {
+					is.close();
+				}
+			}
+		} catch (Exception e) {
+			try {
+				File file = new File("libjmdb.so");
+				System.load(file.getCanonicalPath());
+			} catch (Exception ex) {
+				System.loadLibrary("jmdb");
+			}
+		}
+	}
 
 	public static native int getEnvInfoSize();
 

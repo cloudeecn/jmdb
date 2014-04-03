@@ -17,15 +17,6 @@ public class EnvTest {
 
 	private static final ThreadLocal<Env> env = new ThreadLocal<Env>();
 
-	static {
-		try {
-			File file = new File("libjmdb.so");
-			System.load(file.getCanonicalPath());
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	@Before
 	public void prepare() throws Exception {
 		String path = "test";
@@ -201,8 +192,8 @@ public class EnvTest {
 				Iterator<Entry<String, String>> refEntryI = ref.tailMap(mid)
 						.entrySet().iterator();
 				int count = 0;
-				while ((result = cursor.get(kbuf, 0,
-						first ? klen2 : kbuf.length, vbuf, 0, vbuf.length,
+				while ((result = cursor.get(kbuf, 0, first ? klen2
+						: kbuf.length, vbuf, 0, vbuf.length,
 						first ? CursorOp.MDB_SET : CursorOp.MDB_NEXT)) != -1) {
 					if (!refEntryI.hasNext()) {
 						Assert.assertTrue(false);

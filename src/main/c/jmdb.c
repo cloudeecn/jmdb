@@ -511,6 +511,9 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_get(JNIEnv *vm, jclass clazz,
 	case IOOB:
 		throwNew(vm, "java/lang/IndexOutOfBoundException", lenHolder);
 		return -1;
+	default:
+		throwNew(vm, "java/lang/RuntimeException", "Flow control error in jni");
+		return -1;
 	}
 }
 
@@ -578,6 +581,7 @@ JNIEXPORT jboolean JNICALL Java_jmdb_DatabaseWrapper_del(JNIEnv *vm,
 			valueA ? (*vm)->GetPrimitiveArrayCritical(vm, valueA, NULL) : NULL;
 	if (keyC == NULL || (valueA && valueC == NULL)) {
 		result = OOM;
+		ret = 0; //make gcc happy
 	} else {
 		key.mv_size = klen;
 		key.mv_data = keyC + kofs;
@@ -609,6 +613,9 @@ JNIEXPORT jboolean JNICALL Java_jmdb_DatabaseWrapper_del(JNIEnv *vm,
 		return 0;
 	case MDB:
 		throwDatabaseException(vm, ret);
+		return 0;
+	default:
+		throwNew(vm, "java/lang/RuntimeException", "Flow control error in jni");
 		return 0;
 	}
 }
@@ -737,6 +744,9 @@ JNIEXPORT jlong JNICALL Java_jmdb_DatabaseWrapper_cursorGet(JNIEnv *vm,
 		return -1;
 	case IOOB:
 		throwNew(vm, "java/lang/IndexOutOfBoundException", lenHolder);
+		return -1;
+	default:
+		throwNew(vm, "java/lang/RuntimeException", "Flow control error in jni");
 		return -1;
 	}
 }
