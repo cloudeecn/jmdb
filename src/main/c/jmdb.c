@@ -509,7 +509,7 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_get(JNIEnv *vm, jclass clazz,
 		throwDatabaseException(vm, ret);
 		return -1;
 	case IOOB:
-		throwNew(vm, "java/lang/IndexOutOfBoundException", lenHolder);
+		throwNew(vm, "java/lang/IndexOutOfBoundsException", lenHolder);
 		return -1;
 	default:
 		throwNew(vm, "java/lang/RuntimeException", "Flow control error in jni");
@@ -743,7 +743,7 @@ JNIEXPORT jlong JNICALL Java_jmdb_DatabaseWrapper_cursorGet(JNIEnv *vm,
 		throwDatabaseException(vm, code);
 		return -1;
 	case IOOB:
-		throwNew(vm, "java/lang/IndexOutOfBoundException", lenHolder);
+		throwNew(vm, "java/lang/IndexOutOfBoundsException", lenHolder);
 		return -1;
 	default:
 		throwNew(vm, "java/lang/RuntimeException", "Flow control error in jni");
