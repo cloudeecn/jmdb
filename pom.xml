@@ -64,14 +64,14 @@
 								</goals>
 								<configuration>
 									<executable>make</executable>
-									<workingDirectory>target/classes/jmdb/native/linux</workingDirectory>
+									<workingDirectory>src/main/c</workingDirectory>
 									<environmentVariables>
 										<CC>gcc</CC>
+										<JNIDESTDIR>target/classes/jmdb/native/linux</JNIDESTDIR>
 									</environmentVariables>
 									<arguments>
-										<argument>--directory=${basedir}/src/main/c</argument>
 										<argument>clean</argument>
-										<argument>all</argument>
+										<argument>install-jni</argument>
 									</arguments>
 								</configuration>
 							</execution>

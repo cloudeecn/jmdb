@@ -40,6 +40,9 @@ install: $(ILIBS) $(IPROGS) $(IHDRS)
 	for f in $(IHDRS); do cp $$f $(DESTDIR)$(prefix)/include; done
 	for f in $(IDOCS); do cp $$f $(DESTDIR)$(prefix)/man/man1; done
 
+install-jni: $(ILIBS) $(IPROGS) $(IHDRS)
+	mkdir -p $(JNIDESTDIR); for f in $(ILIBS); do cp $$f $(JNIDESTDIR); done
+
 clean:
 	rm -rf $(PROGS) *.[ao] *.so *~ testdb
 
@@ -47,7 +50,7 @@ test:	all
 
 libjmdb.so:	mdb.o midl.o jmdb.o
 #	$(CC) $(LDFLAGS) -pthread -shared -Wl,-Bsymbolic -o $@ mdb.o midl.o $(SOLIBS)
-	$(CC) $(LDFLAGS) -pthread -shared -o $@ mdb.o midl.o jmdb.o $(SOLIBS)
+	$(CC) $(LDFLAGS) -shared -o $@ mdb.o midl.o jmdb.o $(SOLIBS)
 
 mdb.o: mdb.c lmdb.h midl.h
 	$(CC) $(CFLAGS) -fPIC $(CPPFLAGS) -c mdb.c
