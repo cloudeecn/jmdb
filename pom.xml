@@ -58,7 +58,34 @@
 						<executions>
 							<execution>
 								<id>farm-linux</id>
-								<phase>generate-resources</phase>
+								<phase>process-classes</phase>
+								<goals>
+									<goal>exec</goal>
+								</goals>
+								<configuration>
+									<executable>make</executable>
+									<workingDirectory>target/classes/jmdb/native/linux</workingDirectory>
+									<environmentVariables>
+										<CC>gcc</CC>
+									</environmentVariables>
+									<arguments>
+										<argument>--directory=${basedir}/src/main/c</argument>
+										<argument>clean</argument>
+										<argument>all</argument>
+									</arguments>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<version>1.2.1</version>
+						<executions>
+							<execution>
+								<id>farm-osx</id>
+								<phase>process-classes</phase>
 								<goals>
 									<goal>exec</goal>
 								</goals>
@@ -66,7 +93,7 @@
 									<executable>make</executable>
 									<workingDirectory>src/main/c</workingDirectory>
 									<environmentVariables>
-										<CC>gcc</CC>
+										<CC>/usr/x86_64-apple-darwin9/bin/x86_64-apple-darwin9-gcc</CC>
 									</environmentVariables>
 									<arguments>
 										<argument>clean</argument>
