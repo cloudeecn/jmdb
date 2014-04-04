@@ -480,6 +480,7 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_get(JNIEnv *vm, jclass clazz,
 	jbyte *valueC = (*vm)->GetPrimitiveArrayCritical(vm, valueA, NULL);
 	if (keyC == NULL || valueC == NULL) {
 		result = OOM;
+		ret = -1;
 	} else {
 		key.mv_size = klen;
 		key.mv_data = keyC + kofs;
@@ -489,10 +490,10 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_get(JNIEnv *vm, jclass clazz,
 		} else if (ret) {
 			result = MDB;
 		} else if ((jlong) value.mv_size > vlen) {
-			sprintf(lenHolder, "V%d/%d", (int ) value.mv_size, vlen);
+			sprintf(lenHolder, "V%d/%d", (int) value.mv_size, vlen);
 			result = IOOB;
 		} else if ((jlong) key.mv_size > klen) {
-			sprintf(lenHolder, "K%d/%d", (int ) key.mv_size, klen);
+			sprintf(lenHolder, "K%d/%d", (int) key.mv_size, klen);
 			result = IOOB;
 		} else {
 			memcpy(valueC + vofs, value.mv_data, value.mv_size);
@@ -539,6 +540,7 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_put(JNIEnv *vm, jclass clazz,
 	jbyte *valueC = (*vm)->GetPrimitiveArrayCritical(vm, valueA, NULL);
 	if (keyC == NULL || valueC == NULL) {
 		result = OOM;
+		ret = -1;
 	} else {
 		key.mv_size = klen;
 		key.mv_data = keyC + kofs;
@@ -711,6 +713,8 @@ JNIEXPORT jlong JNICALL Java_jmdb_DatabaseWrapper_cursorGet(JNIEnv *vm,
 	jbyte *valueC = (*vm)->GetPrimitiveArrayCritical(vm, valueA, NULL);
 	if (keyC == NULL || valueC == NULL) {
 		result = OOM;
+		ret = -1;
+		code = 0;
 	} else {
 		key.mv_size = klen;
 		key.mv_data = keyC + kofs;
@@ -721,10 +725,10 @@ JNIEXPORT jlong JNICALL Java_jmdb_DatabaseWrapper_cursorGet(JNIEnv *vm,
 		} else if (code) {
 			result = MDB;
 		} else if ((jlong) value.mv_size > vlen) {
-			sprintf(lenHolder, "V%d/%d", (int ) value.mv_size, vlen);
+			sprintf(lenHolder, "V%d/%d", (int) value.mv_size, vlen);
 			result = IOOB;
 		} else if ((jlong) key.mv_size > klen) {
-			sprintf(lenHolder, "K%d/%d", (int ) key.mv_size, klen);
+			sprintf(lenHolder, "K%d/%d", (int) key.mv_size, klen);
 			result = IOOB;
 		} else {
 			memcpy(keyC + kofs, key.mv_data, key.mv_size);
@@ -773,6 +777,7 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_cursorPut(JNIEnv *vm,
 	jbyte *valueC = (*vm)->GetPrimitiveArrayCritical(vm, valueA, NULL);
 	if (keyC == NULL || valueC == NULL) {
 		result = OOM;
+		ret = -1;
 	} else {
 		key.mv_size = klen;
 		key.mv_data = keyC + kofs;
