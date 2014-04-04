@@ -473,7 +473,7 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_get(JNIEnv *vm, jclass clazz,
 		NONE, OOM, MDB, IOOB
 	} result = NONE;
 	jint ret;
-	char lenHolder[16];
+	char lenHolder[64];
 	MDB_val key, value;
 
 	jbyte *keyC = (*vm)->GetPrimitiveArrayCritical(vm, keyA, NULL);
@@ -489,7 +489,10 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_get(JNIEnv *vm, jclass clazz,
 		} else if (ret) {
 			result = MDB;
 		} else if ((jlong) value.mv_size > vlen) {
-			sprintf(lenHolder, "%d", (int )value.mv_size);
+			sprintf(lenHolder, "V%d/%d", vlen, (int) value.mv_size);
+			result = IOOB;
+		} else if ((jlong) key.mv_size > klen) {
+			sprintf(lenHolder, "K%d/%d", klen, (int) key.mv_size);
 			result = IOOB;
 		} else {
 			memcpy(valueC + vofs, value.mv_data, value.mv_size);
@@ -701,7 +704,7 @@ JNIEXPORT jlong JNICALL Java_jmdb_DatabaseWrapper_cursorGet(JNIEnv *vm,
 	} result = NONE;
 	jlong ret;
 	jint code;
-	char lenHolder[16];
+	char lenHolder[64];
 	MDB_val key, value;
 
 	jbyte *keyC = (*vm)->GetPrimitiveArrayCritical(vm, keyA, NULL);
@@ -718,10 +721,10 @@ JNIEXPORT jlong JNICALL Java_jmdb_DatabaseWrapper_cursorGet(JNIEnv *vm,
 		} else if (code) {
 			result = MDB;
 		} else if ((jlong) value.mv_size > vlen) {
-			sprintf(lenHolder, "%d", (int )value.mv_size);
+			sprintf(lenHolder, "V%d/%d", vlen, (int) value.mv_size);
 			result = IOOB;
 		} else if ((jlong) key.mv_size > klen) {
-			sprintf(lenHolder, "%d", (int )key.mv_size);
+			sprintf(lenHolder, "K%d/%d", klen, (int) key.mv_size);
 			result = IOOB;
 		} else {
 			memcpy(keyC + kofs, key.mv_data, key.mv_size);
