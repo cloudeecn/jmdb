@@ -27,6 +27,9 @@
 # define NULL ((void*)(0x0))
 #endif
 
+#define JMDB_STAT_SIZE 6
+#define JMDB_INFO_SIZE 6
+
 static void throwDatabaseException(JNIEnv *vm, jint code) {
 	jclass exceptionClazz = (*vm)->FindClass(vm, "jmdb/DatabaseException");
 	jmethodID initMethod = (*vm)->GetMethodID(vm, exceptionClazz, "<init>",
@@ -71,7 +74,7 @@ static void throwNew(JNIEnv *vm, const char *className, const char *message) {
  */
 JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_getEnvInfoSize(JNIEnv *vm,
 		jclass clazz) {
-	return sizeof(MDB_envinfo);
+	return JMDB_INFO_SIZE;
 }
 
 /*
@@ -81,7 +84,7 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_getEnvInfoSize(JNIEnv *vm,
  */
 JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_getStatSize(JNIEnv *vm,
 		jclass clazz) {
-	return sizeof(MDB_stat);
+	return JMDB_STAT_SIZE;
 }
 
 /*
@@ -135,22 +138,32 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_envCopy(JNIEnv *vm,
 /*
  * Class:     jmdb_DatabaseWrapper
  * Method:    envStat
- * Signature: (JLjava/nio/ByteBuffer;)V
+ * Signature: (J[J)V
  */
 JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_envStat(JNIEnv *vm,
-		jclass clazz, jlong envL, jobject buf) {
+		jclass clazz, jlong envL, jlongArray buf) {
 	MDB_env *envC = (MDB_env*) envL;
-	MDB_stat *stat = (*vm)->GetDirectBufferAddress(vm, buf);
-	jlong size = (*vm)->GetDirectBufferCapacity(vm, buf);
-	if (size < (jlong) sizeof(MDB_stat)) {
+	MDB_stat stat;
+	jsize size = (*vm)->GetArrayLength(vm, buf);
+	jlong *bufC;
+	if (size < JMDB_STAT_SIZE) {
 		throwNew(vm, "java/lang/IndexOutOfBoundsException",
-				"ByteBuffer's capacity is less than MDB_stat's size");
+				"stat[]'s length is less than MDB_stat's entries");
 		return;
 	}
-	int code = mdb_env_stat(envC, stat);
+	int code = mdb_env_stat(envC, &stat);
 	if (code) {
 		throwDatabaseException(vm, code);
+		return;
 	}
+	bufC = (*vm)->GetPrimitiveArrayCritical(vm, buf, NULL);
+	bufC[0] = stat.ms_psize;
+	bufC[1] = stat.ms_depth;
+	bufC[2] = stat.ms_branch_pages;
+	bufC[3] = stat.ms_leaf_pages;
+	bufC[4] = stat.ms_overflow_pages;
+	bufC[5] = stat.ms_entries;
+	(*vm)->ReleasePrimitiveArrayCritical(vm, buf, bufC, 0);
 }
 
 /*
@@ -161,17 +174,27 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_envStat(JNIEnv *vm,
 JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_envInfo(JNIEnv *vm,
 		jclass clazz, jlong envL, jobject buf) {
 	MDB_env *envC = (MDB_env*) envL;
-	MDB_envinfo *info = (*vm)->GetDirectBufferAddress(vm, buf);
-	jlong size = (*vm)->GetDirectBufferCapacity(vm, buf);
-	if (size < (jlong) sizeof(MDB_envinfo)) {
+	MDB_envinfo info;
+	jsize size = (*vm)->GetArrayLength(vm, buf);
+	jlong *bufC;
+	if (size < JMDB_INFO_SIZE) {
 		throwNew(vm, "java/lang/IndexOutOfBoundsException",
-				"ByteBuffer's capacity is less than MDB_envinfo's size");
+				"info[]'s length is less than MDB_info's entries");
 		return;
 	}
-	int code = mdb_env_info(envC, info);
+	int code = mdb_env_info(envC, &info);
 	if (code) {
 		throwDatabaseException(vm, code);
+		return;
 	}
+	bufC = (*vm)->GetPrimitiveArrayCritical(vm, buf, NULL);
+	bufC[0] = (jlong) info.me_mapaddr;
+	bufC[1] = (jlong) info.me_mapsize;
+	bufC[2] = (jlong) info.me_last_pgno;
+	bufC[3] = (jlong) info.me_last_txnid;
+	bufC[4] = (jlong) info.me_maxreaders;
+	bufC[5] = (jlong) info.me_numreaders;
+	(*vm)->ReleasePrimitiveArrayCritical(vm, buf, bufC, 0);
 }
 
 /*
@@ -418,18 +441,27 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_dbiOpen(JNIEnv *vm,
 JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_stat(JNIEnv *vm, jclass clazz,
 		jlong txnL, jint dbi, jobject buf) {
 	MDB_txn *txnC = (MDB_txn*) txnL;
-	MDB_stat *stat = (*vm)->GetDirectBufferAddress(vm, buf);
-	jlong size = (*vm)->GetDirectBufferCapacity(vm, buf);
-	int code;
-	if (size < (jlong) sizeof(MDB_stat)) {
+	MDB_stat stat;
+	jsize size = (*vm)->GetArrayLength(vm, buf);
+	jlong *bufC;
+	if (size < JMDB_STAT_SIZE) {
 		throwNew(vm, "java/lang/IndexOutOfBoundsException",
-				"ByteBuffer's capacity is less than MDB_stat's size");
+				"stat[]'s length is less than MDB_stat's entries");
 		return;
 	}
-	code = mdb_stat(txnC, (MDB_dbi) dbi, stat);
+	int code = mdb_stat(txnC, (MDB_dbi) dbi, &stat);
 	if (code) {
 		throwDatabaseException(vm, code);
+		return;
 	}
+	bufC = (*vm)->GetPrimitiveArrayCritical(vm, buf, NULL);
+	bufC[0] = stat.ms_psize;
+	bufC[1] = stat.ms_depth;
+	bufC[2] = stat.ms_branch_pages;
+	bufC[3] = stat.ms_leaf_pages;
+	bufC[4] = stat.ms_overflow_pages;
+	bufC[5] = stat.ms_entries;
+	(*vm)->ReleasePrimitiveArrayCritical(vm, buf, bufC, 0);
 }
 
 /*
@@ -490,10 +522,10 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_get(JNIEnv *vm, jclass clazz,
 		} else if (ret) {
 			result = MDB;
 		} else if ((jlong) value.mv_size > vlen) {
-			sprintf(lenHolder, "V%d/%d", (int) value.mv_size, vlen);
+			sprintf(lenHolder, "V%d/%d", (int ) value.mv_size, vlen);
 			result = IOOB;
 		} else if ((jlong) key.mv_size > klen) {
-			sprintf(lenHolder, "K%d/%d", (int) key.mv_size, klen);
+			sprintf(lenHolder, "K%d/%d", (int ) key.mv_size, klen);
 			result = IOOB;
 		} else {
 			memcpy(valueC + vofs, value.mv_data, value.mv_size);
@@ -725,10 +757,10 @@ JNIEXPORT jlong JNICALL Java_jmdb_DatabaseWrapper_cursorGet(JNIEnv *vm,
 		} else if (code) {
 			result = MDB;
 		} else if ((jlong) value.mv_size > vlen) {
-			sprintf(lenHolder, "V%d/%d", (int) value.mv_size, vlen);
+			sprintf(lenHolder, "V%d/%d", (int ) value.mv_size, vlen);
 			result = IOOB;
 		} else if ((jlong) key.mv_size > klen) {
-			sprintf(lenHolder, "K%d/%d", (int) key.mv_size, klen);
+			sprintf(lenHolder, "K%d/%d", (int ) key.mv_size, klen);
 			result = IOOB;
 		} else {
 			memcpy(keyC + kofs, key.mv_data, key.mv_size);

@@ -18,14 +18,37 @@
  */
 package jmdb;
 
-import java.nio.ByteBuffer;
 
-public class EnvStat {
+public class Stat {
 
-	ByteBuffer pointer;
+	long[] values;
 
-	public EnvStat() {
-		pointer = ByteBuffer.allocateDirect(DatabaseWrapper.getStatSize());
+	public Stat() {
+		values = new long[DatabaseWrapper.getStatSize()];
+	}
+
+	public long getPageSize() {
+		return values[0];
+	}
+
+	public long getDepth() {
+		return values[1];
+	}
+
+	public long getBranchPages() {
+		return values[2];
+	}
+
+	public long getLeafPages() {
+		return values[3];
+	}
+
+	public long getOverflowPages() {
+		return values[4];
+	}
+
+	public long getEntries() {
+		return values[5];
 	}
 
 }

@@ -118,6 +118,20 @@ public class Env implements Closeable {
 		return path;
 	}
 
+	public EnvInfo getInfo() {
+		checkClosed();
+		EnvInfo ret = new EnvInfo();
+		DatabaseWrapper.envInfo(pointer, ret.values);
+		return ret;
+	}
+
+	public Stat getStat() {
+		checkClosed();
+		Stat ret = new Stat();
+		DatabaseWrapper.envInfo(pointer, ret.values);
+		return ret;
+	}
+
 	protected void finalize() {
 		if (!closed) {
 			log.error("Env not closed!!!");

@@ -50,18 +50,18 @@ JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_envCopy
 /*
  * Class:     jmdb_DatabaseWrapper
  * Method:    envStat
- * Signature: (JLjava/nio/ByteBuffer;)V
+ * Signature: (J[J)V
  */
 JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_envStat
-  (JNIEnv *, jclass, jlong, jobject);
+  (JNIEnv *, jclass, jlong, jlongArray);
 
 /*
  * Class:     jmdb_DatabaseWrapper
  * Method:    envInfo
- * Signature: (JLjava/nio/ByteBuffer;)V
+ * Signature: (J[J)V
  */
 JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_envInfo
-  (JNIEnv *, jclass, jlong, jobject);
+  (JNIEnv *, jclass, jlong, jlongArray);
 
 /*
  * Class:     jmdb_DatabaseWrapper
@@ -202,10 +202,10 @@ JNIEXPORT jint JNICALL Java_jmdb_DatabaseWrapper_dbiOpen
 /*
  * Class:     jmdb_DatabaseWrapper
  * Method:    stat
- * Signature: (JILjava/nio/ByteBuffer;)V
+ * Signature: (JI[J)V
  */
 JNIEXPORT void JNICALL Java_jmdb_DatabaseWrapper_stat
-  (JNIEnv *, jclass, jlong, jint, jobject);
+  (JNIEnv *, jclass, jlong, jint, jlongArray);
 
 /*
  * Class:     jmdb_DatabaseWrapper

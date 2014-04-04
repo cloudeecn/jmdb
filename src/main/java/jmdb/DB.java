@@ -16,6 +16,12 @@ public class DB {
 	private boolean closed = false;
 	private StackTraceElement[] trace;
 
+	private void checkClosed() {
+		if (closed) {
+			throw new IllegalStateException("DB is closed");
+		}
+	}
+
 	DB(Transaction transaction, String name, int flags) {
 		this.transaction = transaction;
 		env = transaction.env;
@@ -31,11 +37,8 @@ public class DB {
 	}
 
 	public int getFlags() {
-		if (closed) {
-			throw new IllegalStateException("DB is closed");
-		} else {
-			return DatabaseWrapper.dbiFlags(transaction.pointer, handle);
-		}
+		checkClosed();
+		return DatabaseWrapper.dbiFlags(transaction.pointer, handle);
 	}
 
 	private void checkParameters(String msg, byte[] buf, int ofs, int len) {
@@ -50,14 +53,11 @@ public class DB {
 
 	public int get(byte[] key, int kofs, int klen, byte[] value, int vofs,
 			int vlen) {
-		if (closed) {
-			throw new IllegalStateException("DB is closed");
-		} else {
-			checkParameters("key", key, kofs, klen);
-			checkParameters("value", value, vofs, vlen);
-			return DatabaseWrapper.get(transaction.pointer, handle, key, kofs,
-					klen, value, vofs, vlen);
-		}
+		checkClosed();
+		checkParameters("key", key, kofs, klen);
+		checkParameters("value", value, vofs, vlen);
+		return DatabaseWrapper.get(transaction.pointer, handle, key, kofs,
+				klen, value, vofs, vlen);
 	}
 
 	public int get(byte[] key, byte[] holder) {
@@ -79,14 +79,11 @@ public class DB {
 
 	public void put(byte[] key, int kofs, int klen, byte[] value, int vofs,
 			int vlen, int flags) {
-		if (closed) {
-			throw new IllegalStateException("DB is closed");
-		} else {
-			checkParameters("key", key, kofs, klen);
-			checkParameters("value", value, vofs, vlen);
-			DatabaseWrapper.put(transaction.pointer, handle, key, kofs, klen,
-					value, vofs, vlen, flags);
-		}
+		checkClosed();
+		checkParameters("key", key, kofs, klen);
+		checkParameters("value", value, vofs, vlen);
+		DatabaseWrapper.put(transaction.pointer, handle, key, kofs, klen,
+				value, vofs, vlen, flags);
 	}
 
 	public void put(byte[] key, byte[] value) {
@@ -103,23 +100,25 @@ public class DB {
 
 	public boolean remove(byte[] key, int kofs, int klen, byte[] value,
 			int vofs, int vlen) {
-		if (closed) {
-			throw new IllegalStateException("DB is closed");
-		} else {
-			checkParameters("key", key, kofs, klen);
-			if (value != null) {
-				checkParameters("value", value, vofs, vlen);
-			}
-			return DatabaseWrapper.del(transaction.pointer, handle, key, kofs,
-					klen, value, vofs, vlen);
+		checkClosed();
+		checkParameters("key", key, kofs, klen);
+		if (value != null) {
+			checkParameters("value", value, vofs, vlen);
 		}
+		return DatabaseWrapper.del(transaction.pointer, handle, key, kofs,
+				klen, value, vofs, vlen);
 	}
 
 	public Cursor openCursor() {
-		if (closed) {
-			throw new IllegalStateException("DB is closed");
-		}
+		checkClosed();
 		return new Cursor(this);
+	}
+
+	public Stat getStat() {
+		checkClosed();
+		Stat ret = new Stat();
+		DatabaseWrapper.stat(transaction.pointer, this.handle, ret.values);
+		return ret;
 	}
 
 	void close() {

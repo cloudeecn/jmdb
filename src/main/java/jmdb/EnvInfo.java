@@ -18,12 +18,35 @@
  */
 package jmdb;
 
-import java.nio.ByteBuffer;
 
 public class EnvInfo {
-	ByteBuffer pointer;
+	long[] values;
 
 	public EnvInfo() {
-		pointer = ByteBuffer.allocateDirect(DatabaseWrapper.getEnvInfoSize());
+		values = new long[DatabaseWrapper.getStatSize()];
+	}
+
+	public long getMapAddr() {
+		return values[0];
+	}
+
+	public long getMapSize() {
+		return values[1];
+	}
+
+	public long getLastPageNo() {
+		return values[2];
+	}
+
+	public long getLastTransactionId() {
+		return values[3];
+	}
+
+	public long getMaxReaders() {
+		return values[4];
+	}
+
+	public long getNumReaders() {
+		return values[5];
 	}
 }

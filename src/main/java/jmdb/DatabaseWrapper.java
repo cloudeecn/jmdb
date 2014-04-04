@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 
 /**
  * Raw access to mdb_xxx functions, very dangerous! please use wrapped objects
@@ -96,9 +95,9 @@ class DatabaseWrapper {
 
 	public static native void envCopy(long env, String path);
 
-	public static native void envStat(long env, ByteBuffer stat);
+	public static native void envStat(long env, long[] stat);
 
-	public static native void envInfo(long env, ByteBuffer info);
+	public static native void envInfo(long env, long[] info);
 
 	public static native void envSync(long env, boolean force);
 
@@ -134,7 +133,7 @@ class DatabaseWrapper {
 
 	public static native int dbiOpen(long txn, String name, int flags);
 
-	public static native void stat(long txn, int dbi, ByteBuffer stat);
+	public static native void stat(long txn, int dbi, long[] stat);
 
 	public static native int dbiFlags(long txn, int dbi);
 

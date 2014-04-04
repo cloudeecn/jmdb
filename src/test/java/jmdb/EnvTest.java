@@ -25,7 +25,7 @@ public class EnvTest {
 		for (File file : dir.listFiles()) {
 			file.delete();
 		}
-		Env env = new Env();
+		Env env = new Env(true);
 		try {
 			env.setMapSize(16777216);
 			env.setMaxDbs(16);
@@ -118,6 +118,7 @@ public class EnvTest {
 
 		Transaction transaction = env.beginTransaction(false);
 		try {
+			Stat stat;
 			TreeMap<String, String> ref = new TreeMap<String, String>();
 			DB db = transaction.openDB("test", DBFlags.MDB_CREATE);
 			for (int i = 0; i < 16384; i++) {
@@ -126,9 +127,13 @@ public class EnvTest {
 				ref.put(key, value);
 				put(db, key, value);
 			}
+			stat = db.getStat();
+			Assert.assertEquals(ref.size(), stat.getEntries());
 			transaction.commit();
 			transaction = env.beginTransaction(true);
 			db = transaction.openDB("test", DBFlags.MDB_CREATE);
+			stat = db.getStat();
+			Assert.assertEquals(ref.size(), stat.getEntries());
 			for (String refKey : ref.keySet()) {
 				String refValue = ref.get(refKey);
 				String value = get(db, refKey);
@@ -143,7 +148,8 @@ public class EnvTest {
 				Assert.assertEquals(refValue, value);
 			}
 			transaction.rollback();
-			transaction = env.beginTransaction(true);
+
+			transaction = env.beginTransaction(false);
 			db = transaction.openDB("test", DBFlags.MDB_CREATE);
 			String mid = null;
 			Cursor cursor = db.openCursor();
@@ -179,6 +185,10 @@ public class EnvTest {
 			} finally {
 				cursor.close();
 			}
+			transaction.commit();
+
+			transaction = env.beginTransaction(true);
+			db = transaction.openDB("test", DBFlags.MDB_CREATE);
 			cursor = db.openCursor();
 			try {
 				byte[] tmp = mid.getBytes("utf-8");
